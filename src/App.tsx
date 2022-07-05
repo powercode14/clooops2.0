@@ -1,8 +1,8 @@
 import React from 'react';
 import { ThemeProvider } from 'styled-components';
-import './App.css';
-import Login from 'components/login/Login';
-import ReactLogin from 'components/login/ReactLogin';
+import ReactSignIn from 'pages/signin';
+import { GlobalStyle } from 'Styled/Global';
+import { Routes, Route } from 'react-router-dom';
 
 const App = () => {
   const theme = {
@@ -13,10 +13,10 @@ const App = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="App">
-        <Login /> {/* HTML + CSS 버전 */}
-        <ReactLogin /> {/* React + Styled-component 버전 */}
-      </div>
+      <GlobalStyle />
+      <Routes>
+        <Route path="/" element={<ReactSignIn />} />
+      </Routes>
     </ThemeProvider>
   );
 };
