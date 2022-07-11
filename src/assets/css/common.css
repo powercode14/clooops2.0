@@ -1,7 +1,7 @@
 @charset "utf-8";
 
 *, :after, :before {box-sizing:border-box;}
-html, body {font-family:'Noto Sans KR', 'Malgun Gothic', '맑은 고딕', sans-serif; font-size:14px; color:#000; letter-spacing: -0.6px;}
+html, body {font-family:'Noto Sans KR', 'Malgun Gothic', sans-serif; font-size:14px; color:#000; letter-spacing: -0.6px;}
 
 /* scrollbar */
 ::-webkit-scrollbar {-webkit-appearance:none; height:7px; width:7px;}

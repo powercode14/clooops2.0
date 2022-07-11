@@ -1,7 +1,44 @@
 import 'assets/css/style.css';
 import logoImg from 'assets/images/login_logo.png';
+import { useLocation, useNavigate } from 'react-router';
+import useStore from 'auth/store';
+import { useEffect } from 'react';
 
 const Signin = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname ?? '/home';
+  const { user, signIn } = useStore();
+
+  useEffect(() => {
+    if (user) {
+      return navigate('/home', { replace: true });
+    }
+  }, []);
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email');
+    const password = formData.get('password');
+
+    signIn({ email, password }, (err) => {
+      // Send them back to the page they tried to visit when they were
+      // redirected to the login page. Use { replace: true } so we don't create
+      // another entry in the history stack for the login page.  This means that
+      // when they get to the protected page and click the back button, they
+      // won't end up back on the login page, which is also really nice for the
+      // user experience.
+      if (err) {
+        // handleAlertChange(err);
+        // passwordRef.current.value = '';
+      } else {
+        navigate(from, { replace: true });
+      }
+    });
+  }
+
   return (
     <div id="login-wrapper">
       <div id="login-container">
@@ -20,9 +57,10 @@ const Signin = () => {
                 </p>
               </div>
               <div className="divide" />
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="field">
                   <input
+                    name="email"
                     type="text"
                     className="fm-control round w-100"
                     placeholder="ID (Email)"
@@ -31,16 +69,17 @@ const Signin = () => {
                 </div>
                 <div className="field">
                   <input
+                    name="password"
                     type="password"
                     className="fm-control round w-100"
                     placeholder="Password"
                     title="비밀번호"
                   />
                 </div>
+                <button type="submit" className="btn btn-solid big round w-100">
+                  LOGIN
+                </button>
               </form>
-              <button type="button" className="btn btn-solid big round w-100">
-                LOGIN
-              </button>
               <div className="login-footer">
                 <p className="ft-100">Copyright ⓒ 2022</p>
                 <p className="ft-100">Cloocus Co. Ltd. All rights reserved.</p>
