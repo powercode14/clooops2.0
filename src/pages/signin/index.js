@@ -1,18 +1,19 @@
-import 'assets/css/style.css';
 import logoImg from 'assets/images/login_logo.png';
-import { useLocation, useNavigate } from 'react-router';
-import useStore from 'auth/store';
 import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import useStore from 'auth/store';
+import { SignInButton } from './SignInButton';
 
 const Signin = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname ?? '/home';
-  const { user, signIn } = useStore();
+  const location: any = useLocation();
+  const from =
+    location.state?.from?.pathname ?? process.env.REACT_APP_DASHBOARD_PATH;
+  const { user, signIn, msLogin } = useStore();
 
   useEffect(() => {
     if (user) {
-      return navigate('/home', { replace: true });
+      return navigate('/monthlyreport/dashboard', { replace: true });
     }
   }, []);
 
@@ -31,13 +32,27 @@ const Signin = () => {
       // won't end up back on the login page, which is also really nice for the
       // user experience.
       if (err) {
-        // handleAlertChange(err);
+        console.log(err);
         // passwordRef.current.value = '';
       } else {
         navigate(from, { replace: true });
       }
     });
   }
+
+  const handleMsSubmit = (params) => {
+    const { idTokenClaims } = params;
+    const { email, aud, tid } = idTokenClaims;
+    console.log(idTokenClaims);
+
+    msLogin({ email, aud, tid }, (err) => {
+      if (err) {
+        console.log(err);
+      } else {
+        navigate(from, { replace: true });
+      }
+    });
+  };
 
   return (
     <div id="login-wrapper">
@@ -80,6 +95,13 @@ const Signin = () => {
                   LOGIN
                 </button>
               </form>
+              <div
+                className="login-footer"
+                style={{ marginTop: '3%', marginBottom: '3%' }}
+              >
+                <p className="ft-100">또는</p>
+              </div>
+              <SignInButton handleSubmit={handleMsSubmit} />
               <div className="login-footer">
                 <p className="ft-100">Copyright ⓒ 2022</p>
                 <p className="ft-100">Cloocus Co. Ltd. All rights reserved.</p>

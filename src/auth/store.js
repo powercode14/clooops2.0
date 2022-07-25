@@ -17,64 +17,76 @@ const useStore = createStore(
     },
     (set, get) => ({
       loading: false,
-      topMenuOpen: false,
       user: null,
       profile: null,
       custId: null,
       subs: null,
-      subsId: null,
+      subsId: '',
       subsArr: null,
-      entitlementId: null,
-      setter(obj) {
-        set(() => obj);
-      },
+      entitlementId: '',
+      cloudTypeCd: null,
       setLoading(loading) {
         set((data) => {
           if (typeof loading === 'boolean') {
             return { loading };
-          } else if (typeof loading === 'function') {
-            return { loading: loading(data.loading) };
-          } else {
-            return { loading: !data.loading };
           }
+          if (typeof loading === 'function') {
+            return { loading: loading(data.loading) };
+          }
+          return { loading: !data.loading };
         });
       },
       setUser(email) {
-        get().setter({ user: email });
+        set(() => ({ user: email }));
       },
       setProfile(profile) {
-        get().setter({ profile });
+        set(() => ({ profile }));
       },
       setCustId(custId) {
-        get().setter({ custId });
+        set(() => ({ custId }));
       },
       setCloudTypeCd(cloudTypeCd) {
-        get().setter({ cloudTypeCd });
+        set(() => ({ cloudTypeCd }));
       },
       setSubs(subs) {
-        get().setter({ subs });
+        set(() => ({ subs }));
       },
       setSubsArr(subsArr) {
-        get().setter({ subsArr });
+        set(() => ({ subsArr }));
       },
       setSubsId(subsId) {
-        get().setter({ subsId });
+        set(() => ({ subsId }));
       },
       setEntitlementId(entitlementId) {
-        get().setter({ entitlementId });
+        set(() => ({ entitlementId }));
       },
       selectCust(customer) {
         const { id: custId, cloudTypeCd } = customer;
-        get().setCustId(custId);
-        get().setCloudTypeCd(cloudTypeCd);
-        get().setSubs();
-        get().setSubsId();
-        get().setEntitlementId();
+        set(() => ({
+          custId,
+          cloudTypeCd,
+          subs: null,
+          subsId: null,
+          entitlementId: null,
+        }));
       },
       selectSubs(subs) {
-        get().setSubs(subs);
-        get().setSubsId(subs?.id ?? null);
-        get().setEntitlementId(subs?.entitlementId ?? null);
+        get().setSubsId(subs?.id ?? '');
+        get().setEntitlementId(subs?.entitlementId ?? '');
+      },
+      async init() {
+        const { profile } = await getUserProfile();
+        if (profile) {
+          set(() => ({ profile }));
+          get().selectCust(profile?.customers[0]);
+          get().setSubsArr(
+            get().subsId
+              ? [get().entitlementId]
+              : profile.companyProfile.find(
+                  ({ id }) => id === profile?.customers[0]?.id,
+                )?.subs ?? null,
+          );
+        }
       },
       async signIn(params, callback) {
         const loginResult = await postAPI({ url: '/login', params })
@@ -92,22 +104,34 @@ const useStore = createStore(
           })
           .catch(({ response: res }) => {
             if (res.status < 500) {
-              callback(res.data.message);
+              callback(res.data);
             }
           });
         if (loginResult) {
-          const { profile } = await getUserProfile();
-          if (profile) {
-            get().setProfile(profile);
-            get().selectCust(profile?.customers[0]);
-            get().setSubsArr(
-              get().subsId
-                ? [get().entitlementId]
-                : profile.companyProfile.find(
-                    ({ id }) => id === profile?.customers[0]?.id,
-                  )?.subs ?? null,
-            );
-          }
+          await get().init();
+          callback();
+        }
+      },
+      msLogin: async (params, callback) => {
+        const loginResult = await postAPI({ url: '/mslogin', params })
+          .then((res) => {
+            const expires = new Date();
+            expires.setHours(expires.getHours() + 1);
+            if (res.status === 200) {
+              const { token } = res.data;
+              get().setUser(params.email);
+              setToken(token);
+              return true;
+            }
+            return false;
+          })
+          .catch(({ response: res }) => {
+            if (res.status < 500) {
+              callback(res.data);
+            }
+          });
+        if (loginResult) {
+          await get().init();
           callback();
         }
       },

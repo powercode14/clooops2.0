@@ -29,13 +29,18 @@ export const getUserProfile = async () => {
     });
 };
 
-export const getAPI = async ({ kind, pathStr, params, custId }) => {
-  const url = custId ? `/${kind}/${custId}/${pathStr}` : `/${kind}/${pathStr}`;
-  return await axiosInstance.get(url, { params }).then((res) => res.data);
+export const getAPI = async (path, params) => {
+  return await axiosInstance.get(path, { params }).then((res) => res.data);
 };
 
 export const postAPI = async ({ url, params }) => {
   return await axiosInstance.post(url, params);
+};
+
+export const multiAPI = async (requestArr = []) => {
+  return axios.all(
+    requestArr.map(({ path, params }) => axiosInstance.get(path, { params })),
+  );
 };
 
 export const fileUpload = async ({ url, acceptedFiles }) => {
